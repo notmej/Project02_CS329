@@ -6,6 +6,7 @@
 /**
  *
  * @author yuna
+ * Represents the result of mapping 
  */
 public class CacheResult {
     
@@ -14,13 +15,15 @@ public class CacheResult {
     private int cacheIndex;
     private int offset;
     private boolean hit;
+    private String missType; 
 
-    public CacheResult(int cpuAddress, int ramBlockNo, int cacheIndex, int offset, boolean hit) {
+    public CacheResult(int cpuAddress, int ramBlockNo, int cacheIndex, int offset, boolean hit, String missType) {
         this.cpuAddress = cpuAddress;
         this.ramBlockNo = ramBlockNo;
         this.cacheIndex = cacheIndex;
         this.offset = offset;
         this.hit = hit;
+        this.missType = missType;
     }
 
     public int getCpuAddress() {
@@ -45,8 +48,9 @@ public class CacheResult {
 
     @Override
     public String toString() {
-        return "CacheResult{" + "cpuAddress=" + cpuAddress + ", ramBlockNo=" + ramBlockNo + ", cacheIndex=" + cacheIndex + ", offset=" + offset + ", hit=" + hit + '}';
+        return "CacheResult{" + "cpuAddress=" + cpuAddress + ", ramBlockNo=" + ramBlockNo + ", cacheIndex=" + cacheIndex + ", offset=" + offset + ", hit=" + hit + ", missType=" + missType + '}';
     }
+
     
     
     
