@@ -20,7 +20,7 @@ public class CacheResult {
     public CacheResult(int cpuAddress, int ramBlockNo, int cacheIndex, int offset, boolean hit, String missType) {
         this.cpuAddress = cpuAddress;
         this.ramBlockNo = ramBlockNo;
-        this.cacheIndex = cacheIndex;
+        this.cacheIndex = cacheIndex; // called line number in Cache.java. Is the position in the cache array
         this.offset = offset;
         this.hit = hit;
         this.missType = missType;

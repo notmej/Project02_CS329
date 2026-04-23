@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public class Cache {
     
-    int nBlocks; // no of cache lines in cache
+    int nBlocks; // no of cache lines/ blocks in cache
     int blockSize;   //line size = block size THIS IS CACHE AND RAM
     int ramSize;  // THIS IS RAM
     
@@ -23,7 +23,7 @@ public class Cache {
     Set<Integer> seenBlocks = new HashSet<>(); // All TAM blocks that were prevousely accesed
  
     
-    
+    //-----------------------------------------------------------------------------------------------------------------------------------------
     //Direct: 1-1/1-many mapping, depends on cache and Ram size
     // cpuAddress => location in RAM that the CPU wants to read or write
     // convert cpuAddress to RAM block, then map to cache
@@ -54,12 +54,11 @@ public class Cache {
         int offset = cpuAddress % blockSize;
         
         //Cache index:
-        // allows for many to one mapping as direct mapping works
-        // 
-        int cacheIndex = ramBlockNo % nBlocks;
+        // allows for many to one mapping as direct mapping works that way
+        int lineNumber = ramBlockNo % nBlocks;
         
         // get the cache line at that index
-        CacheLine line = cache[cacheIndex];
+        CacheLine line = cache[lineNumber];
         
         // types of misses
         String missType = "";
@@ -67,7 +66,7 @@ public class Cache {
         // Hit or miss?
         if (line.valid && line.blockNumber == ramBlockNo) {
             missType = "none";
-            return new CacheResult(cpuAddress, ramBlockNo, cacheIndex, offset, true, missType);
+            return new CacheResult(cpuAddress, ramBlockNo, lineNumber, offset, true, missType);
         } else {
             
             //find out miss type
@@ -89,7 +88,7 @@ public class Cache {
             // load block to Cache line, updates line to carry new RAM block
             line.blockNumber = ramBlockNo; // replaces the existing block with the new one
             line.valid = true;
-            return new CacheResult(cpuAddress, ramBlockNo, cacheIndex, offset, false, missType);
+            return new CacheResult(cpuAddress, ramBlockNo, lineNumber, offset, false, missType);
         }
 
     }
@@ -101,14 +100,14 @@ public class Cache {
         if(cpuAddress < 0 || cpuAddress >= ramSize){
             throw new IllegalArgumentException("Invalid CPU address to map");
         }
-        //find ram block
+        //find ram block number
         int ramBlockNo = cpuAddress / blockSize;
-        //find offset
+        //find offset number
         int offset = cpuAddress % blockSize;
         
-        //search entire cache for hit. associative -> no fixed index
+        //search entire cache for hit. associative -> no fixed index, use tag to search parallel-searcg and find the block
         for( int i = 0; i < cache.length; i++){
-            if(cache[i].valid && cache[i].blockNumber == ramBlockNo){
+            if(cache[i].valid && cache[i].blockNumber == ramBlockNo){ // "cache[i].blockNumber == ramBlockNo" --> tag comparison
                 return new CacheResult(cpuAddress, ramBlockNo, i, offset, true, "none");
             }
         }
@@ -125,9 +124,10 @@ public class Cache {
         }
         
         //find first empty cache line and map the RAM block to that cache line
+        // in hardware, this would be in parallel, not sequential
         for( int i = 0; i < cache.length; i++){
             if(!cache[i].valid){
-                cache[i].blockNumber = ramBlockNo;
+                cache[i].blockNumber = ramBlockNo; 
                 cache[i].valid = true;
                 return new CacheResult(cpuAddress, ramBlockNo, i, offset, false, missType);
             }
@@ -145,12 +145,13 @@ public class Cache {
         return new CacheResult(cpuAddress, ramBlockNo, victimInd, offset, false, missType);
 
     }
-    
-    //todo
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------
     public CacheResult setMap(int cpuAddress) {
         return null;
     }
-    
+    //-----------------------------------------------------------------------------------------------------------------------------------------
+
     
     
     /*	MUST STORE:
@@ -182,6 +183,7 @@ public class Cache {
         this.blockSize = blockSize;
         this.ramSize = ramSize;
         
+        // 
         this.cache = new CacheLine[nBlocks];
         for(int i = 0; i < nBlocks; i++){
             cache[i] = new CacheLine();
