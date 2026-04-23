@@ -17,10 +17,14 @@ public class Cache {
     int blockSize;   //line size = block size THIS IS CACHE AND RAM
     int ramSize;  // THIS IS RAM
     
+    int nReplaceI = 0; // for accociative mapping, specifically picking victim block using FIFO 
+    
     CacheLine[] cache; // cache line where data is mapped to 
     Set<Integer> seenBlocks = new HashSet<>(); // All TAM blocks that were prevousely accesed
  
     
+    
+    //Direct: 1-1/1-many mapping, depends on cache and Ram size
     // cpuAddress => location in RAM that the CPU wants to read or write
     // convert cpuAddress to RAM block, then map to cache
     public CacheResult directMap(int cpuAddress) throws IllegalArgumentException {
@@ -74,27 +78,78 @@ public class Cache {
                 missType = "conflict";
                  //conflic miss only if cache is smaller then ram --> not 1-to-1
                 // conflic miss if:
-                //     17 = 01[00][01]
-                //     1 = 00[00][01]
-                //         tag block offset
+                //     17 = 01 [00] [01]
+                //     1 = 00 [00]  [01]
+                //        tag block offset
                 //              block and offeset identical == miss
             } else {
-                missType = "Cap / other";
+                missType = "Capacity / other";
             }
             
-            // load block to Cache
-            line.blockNumber = ramBlockNo;
+            // load block to Cache line, updates line to carry new RAM block
+            line.blockNumber = ramBlockNo; // replaces the existing block with the new one
             line.valid = true;
             return new CacheResult(cpuAddress, ramBlockNo, cacheIndex, offset, false, missType);
         }
 
     }
    
-    //todo
-    public CacheResult fullyMap(int cpuAddress) { return null;}
+    //-----------------------------------------------------------------------------------------------------------------------------------------
+    public CacheResult fullyMap(int cpuAddress) { 
+        
+        //check if the cpu address is valid
+        if(cpuAddress < 0 || cpuAddress >= ramSize){
+            throw new IllegalArgumentException("Invalid CPU address to map");
+        }
+        //find ram block
+        int ramBlockNo = cpuAddress / blockSize;
+        //find offset
+        int offset = cpuAddress % blockSize;
+        
+        //search entire cache for hit. associative -> no fixed index
+        for( int i = 0; i < cache.length; i++){
+            if(cache[i].valid && cache[i].blockNumber == ramBlockNo){
+                return new CacheResult(cpuAddress, ramBlockNo, i, offset, true, "none");
+            }
+        }
+        
+        // if the hit is not found; check what type of miss is present
+        // associative mapping: no conflict misses at all
+        String missType = "";
+        
+        if(!seenBlocks.contains(ramBlockNo)){
+            missType = "cold";
+            seenBlocks.add(ramBlockNo);
+        } else {
+            missType = "Capacity / other";
+        }
+        
+        //find first empty cache line and map the RAM block to that cache line
+        for( int i = 0; i < cache.length; i++){
+            if(!cache[i].valid){
+                cache[i].blockNumber = ramBlockNo;
+                cache[i].valid = true;
+                return new CacheResult(cpuAddress, ramBlockNo, i, offset, false, missType);
+            }
+        }
+        
+        //cache full = FIFO to find Victim block
+        cache[nReplaceI].blockNumber = ramBlockNo;
+        cache[nReplaceI].valid = true;
+        
+        //save victim index to return as result
+        int victimInd = nReplaceI;
+        //circular index selection
+        nReplaceI = (nReplaceI + 1) % nBlocks;
+        
+        return new CacheResult(cpuAddress, ramBlockNo, victimInd, offset, false, missType);
+
+    }
     
     //todo
-    public CacheResult setMap(int cpuAddress) {return null;}
+    public CacheResult setMap(int cpuAddress) {
+        return null;
+    }
     
     
     
