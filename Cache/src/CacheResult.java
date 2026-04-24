@@ -16,14 +16,36 @@ public class CacheResult {
     private int offset;
     private boolean hit;
     private String missType; 
-
+    private int setIndex;
+    
+    // Constructor for Direct and Associative mapping
+                                                      //cpu line number//
     public CacheResult(int cpuAddress, int ramBlockNo, int cacheIndex, int offset, boolean hit, String missType) {
         this.cpuAddress = cpuAddress;
         this.ramBlockNo = ramBlockNo;
-        this.cacheIndex = cacheIndex; // called line number in Cache.java. Is the position in the cache array
+        this.cacheIndex = cacheIndex; // called ---line number--- in Cache.java. Is the position in the cache array
         this.offset = offset;
         this.hit = hit;
         this.missType = missType;
+    }
+
+    // constructor for Set Associative mapping 
+    public CacheResult(int cpuAddress, int ramBlockNo, int cacheIndex, int offset, boolean hit, String missType, int setIndex) {
+        this.cpuAddress = cpuAddress;
+        this.ramBlockNo = ramBlockNo;
+        this.cacheIndex = cacheIndex;
+        this.offset = offset;
+        this.hit = hit;
+        this.missType = missType;
+        this.setIndex = setIndex;
+    }
+
+    public String getMissType() {
+        return missType;
+    }
+
+    public int getSetIndex() {
+        return setIndex;
     }
 
     public int getCpuAddress() {

@@ -12,7 +12,7 @@
  */
 public class CacheLine {
     public int blockNumber;
-    public boolean valid;
+    public boolean valid; // true = contains data --> cache line contains valid/usable data
     
     public CacheLine() {
         this.blockNumber = -1;

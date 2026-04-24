@@ -138,17 +138,84 @@ public class Cache {
         cache[nReplaceI].valid = true;
         
         //save victim index to return as result
-        int victimInd = nReplaceI;
+        int victimIndex = nReplaceI;
         //circular index selection
         nReplaceI = (nReplaceI + 1) % nBlocks;
         
-        return new CacheResult(cpuAddress, ramBlockNo, victimInd, offset, false, missType);
+        return new CacheResult(cpuAddress, ramBlockNo, victimIndex, offset, false, missType);
 
     }
-
+ 
     //-----------------------------------------------------------------------------------------------------------------------------------------
     public CacheResult setMap(int cpuAddress) {
-        return null;
+        //check if the cpu address is valid
+        if(cpuAddress < 0 || cpuAddress >= ramSize){
+            throw new IllegalArgumentException("Invalid CPU address to map");
+        }
+        
+        // eg for understanding form ppt CH06 - Memory, slide 40:
+        // Imagine your cache is 16 blocks
+        // the size of each block is 8 words
+        // and the blocks are divided into 4 sets
+        // our cpu address requires the 3rd set
+        
+        // cpuAddress = 69
+        // ramBlockNo = 69 / 8 = 8
+        // offset = 69 % 8 = 5 
+        // setindex = 8 % 4 = 2
+        // startOfReqSet = 2 * 4 = 8
+        // endOfReqSet = 8 + 4 -1 = 11 
+        
+        
+        //find ram block number
+        int ramBlockNo = cpuAddress / blockSize;
+        //find offset number
+        int offset = cpuAddress % blockSize;
+        
+        //set index:
+        int setSize = 2; //!!!!!!!!!!! 2-way set associative !!!!!!!!!!!
+        int noOfSets = nBlocks / setSize; // number of blocks / size of each set 
+        int setIndex = ramBlockNo % noOfSets; 
+        int startOfReqIndex = setIndex * setSize;
+        int endOfReqIndex = (startOfReqIndex + setSize) - 1;
+        
+        // search required set for hit
+        for( int i = startOfReqIndex; i <= endOfReqIndex; i++){
+            if( cache[i].valid && cache[i].blockNumber == ramBlockNo){ // check tag hit, like in assocative
+                return new CacheResult(cpuAddress, ramBlockNo, i, offset, true, "none", setIndex);
+            }
+        }
+        
+        // these steps are identical to assciative with th echange bing that its withing the set range
+        // so between StartOfReqSet --> EndOfReqSet
+        // if no hit, determine miss type
+        String missType = "";
+        if(!seenBlocks.contains(ramBlockNo)){
+            missType = "cold";
+            seenBlocks.add(ramBlockNo);
+        } else {
+            missType = "Capacity / other";
+        }
+        
+        //check for empty line in set. if empty then, like in assoative, map the cpuAddress there 
+        for(int i = startOfReqIndex; i <= endOfReqIndex; i++){
+            if(!cache[i].valid){
+                cache[i].valid = true;
+                cache[i].blockNumber = ramBlockNo;
+                return new CacheResult(cpuAddress, ramBlockNo, i, offset, false, missType, setIndex);
+            }
+        }
+        
+        //cache full = FIFO to find Victim block just like in associative
+        cache[nReplaceI].blockNumber = ramBlockNo;
+        cache[nReplaceI].valid = true;
+        
+        //save victim index to return as result
+        int victimIndex = nReplaceI;
+        //circular index selection
+        nReplaceI = (nReplaceI + 1) % nBlocks;
+        
+        return new CacheResult(cpuAddress, ramBlockNo, victimIndex, offset, false, missType, setIndex);
     }
     //-----------------------------------------------------------------------------------------------------------------------------------------
 
