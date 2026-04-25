@@ -275,7 +275,7 @@ public class CacheGUI extends JFrame implements ActionListener {
             String text = "RAM Block: " + result.getRamBlockNo() + " | Cache Block: " + result.getCacheIndex()+ " | Offset: " + result.getOffset()+ " | " + (result.isHit() ? "HIT" : "MISS") + " | Miss Type: " + result.getMissType();
 
             if (type.equals("set")) {
-                text += " | Set: " + result.getSetIndex();
+                text += " | Set (2-way): " + result.getSetIndex();
             }
 
             label.setText(text);
