@@ -2,27 +2,36 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class CacheGUI extends JFrame {
 
-    
     private Cache cache;
+
     private JLabel label;
     private JPanel[] ramPanels;
     private JPanel[] cachePanels;
 
-    private JTextField text;
+    private JPanel centerPanel;
+    private JPanel ramPanel;
+    private JPanel cachePanel;
+
+    private JTextField addressText;
     private JButton directBtn;
     private JButton fullyBtn;
     private JButton setBtn;
+
+    private JTextField nBlocksField;
+    private JTextField blockSizeField;
+    private JTextField ramSizeField;
+    private JButton applyBtn;
 
     private final Color BG          = new Color(30, 30, 46);
     private final Color EMPTY_BLOCK = new Color(68, 71, 90);
@@ -31,193 +40,408 @@ public class CacheGUI extends JFrame {
     private final Color CACHE_MISS  = new Color(119, 12, 12);
     private final Color TEXT_COLOR  = new Color(248, 248, 242);
 
+    
+    
+    // initializes frame and everything in it
     public CacheGUI() {
         cache = new Cache(4, 4, 32);
 
         setTitle("Cache Simulator");
-        setSize(800, 600);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(BG);
 
-        // NORTH
+        
+        buildNorthPanel();
+        buildWestPanel();
+        buildCenterPanel(8, 4);
+        buildSouthPanel();
+
+        setButtonActions();
+    }
+
+    
+    
+    // creates north panel
+    private void buildNorthPanel() {
         JPanel northPanel = new JPanel();
         northPanel.setBackground(BG);
 
-        text = new JTextField(10);
-        text.setBackground(EMPTY_BLOCK);
-        text.setForeground(TEXT_COLOR);
-        text.setCaretColor(TEXT_COLOR);
+        addressText = new JTextField(10);
+        addressText.setBackground(EMPTY_BLOCK);
+        addressText.setForeground(TEXT_COLOR);
+        addressText.setCaretColor(TEXT_COLOR);
 
-        directBtn = new JButton("Direct");
-        directBtn.setOpaque(true);
-        directBtn.setBorderPainted(false);
-        directBtn.setBackground(EMPTY_BLOCK);
-        directBtn.setForeground(TEXT_COLOR);
-        directBtn.setFocusPainted(false);
+        directBtn = makeButton("Direct");
+        fullyBtn = makeButton("Fully Associative");
+        setBtn = makeButton("Set Associative");
 
-        fullyBtn = new JButton("Fully associative");
-        fullyBtn.setOpaque(true);
-        fullyBtn.setBorderPainted(false);
-        fullyBtn.setBackground(EMPTY_BLOCK);
-        fullyBtn.setForeground(TEXT_COLOR);
-        fullyBtn.setFocusPainted(false);
-
-        setBtn = new JButton("Set associative");
-        setBtn.setOpaque(true);
-        setBtn.setBorderPainted(false);
-        setBtn.setBackground(EMPTY_BLOCK);
-        setBtn.setForeground(TEXT_COLOR);
-        setBtn.setFocusPainted(false);
-
+        
         label = new JLabel("Enter an address and select a mapping method");
         label.setForeground(TEXT_COLOR);
 
-        northPanel.add(text);
+         
+        JLabel label02 = new JLabel("cpu address:");
+        label02.setForeground(Color.WHITE);
+
+        northPanel.add(label02);
+        northPanel.add(addressText);
         northPanel.add(directBtn);
         northPanel.add(fullyBtn);
         northPanel.add(setBtn);
         northPanel.add(label);
 
         add(northPanel, BorderLayout.NORTH);
+    }
 
-        // CENTER
-        JPanel centerPanel = new JPanel(new GridLayout(1, 2));
+    
+    
+    // create west panel
+    private void buildWestPanel() {
+        JPanel westPanel = new JPanel(new GridLayout(8, 1, 5, 5));
+        westPanel.setBackground(BG);
+        westPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(TEXT_COLOR), "Cache Settings", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, null,TEXT_COLOR ));
+
+        
+        JLabel nBlocksLabel = makeLabel("Cache Blocks: ");
+        JLabel blockSizeLabel = makeLabel("Block Size: ");
+        JLabel ramSizeLabel = makeLabel("RAM Size: ");
+        JLabel defaultVals = makeLabel("Default values present\n");
+ 
+        
+        nBlocksField = makeTextField("4");
+        blockSizeField = makeTextField("4");
+        ramSizeField = makeTextField("32");
+
+        applyBtn = makeButton("Apply Settings");
+
+        
+        westPanel.add(defaultVals);
+        westPanel.add(new JLabel(""));
+        westPanel.add(nBlocksLabel);
+        westPanel.add(nBlocksField);
+        westPanel.add(blockSizeLabel);
+        westPanel.add(blockSizeField);
+        westPanel.add(ramSizeLabel);
+        westPanel.add(ramSizeField);
+        westPanel.add(new JLabel(""));
+        westPanel.add(applyBtn);
+
+        
+        add(westPanel, BorderLayout.WEST);
+    }
+
+    
+    
+    // creates middle panel
+    private void buildCenterPanel(int nRamBlocks, int nCacheBlocks) {
+        centerPanel = new JPanel(new GridLayout(1, 2));
         centerPanel.setBackground(BG);
-        JPanel ramPanel   = new JPanel(new GridLayout(8, 1));
-        JPanel cachePanel = new JPanel(new GridLayout(4, 1));
+
+        ramPanel = new JPanel(new GridLayout(nRamBlocks ,1));
+        cachePanel = new JPanel(new GridLayout(nCacheBlocks ,1));
+
+        
         ramPanel.setBackground(BG);
         cachePanel.setBackground(BG);
+        
+        ramPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(TEXT_COLOR), "RAM", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, null, TEXT_COLOR ));
+        cachePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(TEXT_COLOR), "Cache",javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, null, TEXT_COLOR));
+        ramPanels = new JPanel[nRamBlocks];
+        cachePanels = new JPanel[nCacheBlocks];
 
-        ramPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(TEXT_COLOR), "RAM",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            null, TEXT_COLOR));
-
-        cachePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(TEXT_COLOR), "Cache",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
-            null, TEXT_COLOR));
-
-        ramPanels   = new JPanel[8];
-        cachePanels = new JPanel[4];
-
-        for (int i = 0; i < 8; i++) {
-            ramPanels[i] = new JPanel();
-            ramPanels[i].setBackground(EMPTY_BLOCK);
-            ramPanels[i].add(new JLabel("RAM " + i));
+        
+        for (int i =0; i < nRamBlocks; i++) {
+            ramPanels[i] = makeBlockPanel("RAM Block " + i);
             ramPanel.add(ramPanels[i]);
         }
-
-        for (int i = 0; i < 4; i++) {
-            cachePanels[i] = new JPanel();
-            cachePanels[i].setBackground(EMPTY_BLOCK);
-            cachePanels[i].add(new JLabel("Cache " + i));
+        
+       
+        for (int i =0; i < nCacheBlocks; i++) {
+            cachePanels[i] = makeBlockPanel("Cache Block " + i);
             cachePanel.add(cachePanels[i]);
         }
 
         centerPanel.add(ramPanel);
         centerPanel.add(cachePanel);
-        add(centerPanel, BorderLayout.CENTER);
 
-        // SOUTH - legend
+        add(centerPanel, BorderLayout.CENTER);
+        
+    }
+
+    
+    
+    // create south panel
+    private void buildSouthPanel() {
         JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 8));
         southPanel.setBackground(BG);
+
+        
         southPanel.add(makeLegendItem("Empty", EMPTY_BLOCK));
         southPanel.add(makeLegendItem("RAM Accessed", RAM_HIT));
         southPanel.add(makeLegendItem("Cache Hit", CACHE_HIT));
         southPanel.add(makeLegendItem("Cache Miss", CACHE_MISS));
-        add(southPanel, BorderLayout.SOUTH);
 
-        // Listeners
+        
+        add(southPanel, BorderLayout.SOUTH);
+    }
+
+    
+    
+    
+    private void setButtonActions() {
+        applyBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                applySettings();
+            }
+        }
+        );
+
+        
         directBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    int cpuAddress = Integer.parseInt(text.getText().trim());
-                    CacheResult result = cache.directMap(cpuAddress);
-                    resetHighlights();
-                    highlightRamBlock(result.getRamBlockNo());
-                    highlightCacheBlock(result.getCacheIndex(), result.isHit());
-                    label.setText("RAM Block: " + result.getRamBlockNo()
-                        + " | Cache Block: " + result.getCacheIndex()
-                        + " | Offset: " + result.getOffset()
-                        + " | " + (result.isHit() ? "HIT" : "MISS"));
-                } catch (Exception ex) {
-                    label.setText("Invalid input. Enter a number between 0 and 31.");
-                }
+                runMapping("direct");
             }
-        });
+        }
+        );
 
+        
+        
         fullyBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    int cpuAddress = Integer.parseInt(text.getText().trim());
-                    CacheResult result = cache.fullyMap(cpuAddress);
-                    resetHighlights();
-                    highlightRamBlock(result.getRamBlockNo());
-                    highlightCacheBlock(result.getCacheIndex(), result.isHit());
-                    label.setText("RAM Block: " + result.getRamBlockNo()
-                        + " | Cache Block: " + result.getCacheIndex()
-                        + " | Offset: " + result.getOffset()
-                        + " | " + (result.isHit() ? "HIT" : "MISS"));
-                } catch (Exception ex) {
-                    label.setText("Invalid input. Enter a number between 0 and 31.");
-                }
+                runMapping("fully");
             }
-        });
+        }
+        );
 
+        
+        
         setBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    int cpuAddress = Integer.parseInt(text.getText().trim());
-                    CacheResult result = cache.setMap(cpuAddress);
-                    resetHighlights();
-                    highlightRamBlock(result.getRamBlockNo());
-                    highlightCacheBlock(result.getCacheIndex(), result.isHit());
-                    label.setText("RAM Block: " + result.getRamBlockNo()
-                        + " | Set: " + result.getSetIndex()
-                        + " | Cache Block: " + result.getCacheIndex()
-                        + " | Offset: " + result.getOffset()
-                        + " | " + (result.isHit() ? "HIT" : "MISS"));
-                } catch (Exception ex) {
-                    label.setText("Invalid input. Enter a number between 0 and 31.");
-                }
+                runMapping("set");
             }
-        });
+        }
+        );
     }
 
+    
+    
+    
+    private void applySettings() {
+        try {
+            int nBlocks = Integer.parseInt(nBlocksField.getText().trim());
+            int blockSize = Integer.parseInt(blockSizeField.getText().trim());
+            int ramSize = Integer.parseInt(ramSizeField.getText().trim());
+
+            
+            validateSettings(nBlocks, blockSize, ramSize);
+
+            cache = new Cache(nBlocks, blockSize, ramSize);
+            int nRamBlocks = ramSize / blockSize;
+
+            remove(centerPanel);
+            buildCenterPanel(nRamBlocks, nBlocks);
+
+            
+            label.setText("settings applied successfully");
+
+            revalidate();
+            repaint();
+
+            
+        } catch (Exception ex) {
+            
+            label.setText(ex.getMessage());
+            
+        }
+    }
+
+    
+    
+    
+    private void runMapping(String type) {
+        try {
+            int cpuAddress = Integer.parseInt(addressText.getText().trim());
+
+            CacheResult result;
+
+            if (type.equals("direct")) {
+                
+                result = cache.directMap(cpuAddress);
+            } else if (type.equals("fully")) {
+                
+                result = cache.fullyMap(cpuAddress);
+            } else {
+                
+                result = cache.setMap(cpuAddress);
+            }
+
+            
+            resetHighlights();
+
+            highlightRamBlock(result.getRamBlockNo());
+            highlightCacheBlock(result.getCacheIndex(), result.isHit());
+
+            String text = "RAM Block: " + result.getRamBlockNo() + " | Cache Block: " + result.getCacheIndex()+ " | Offset: " + result.getOffset()+ " | " + (result.isHit() ? "HIT" : "MISS") + " | Miss Type: " + result.getMissType();
+
+            if (type.equals("set")) {
+                text += " | Set: " + result.getSetIndex();
+            }
+
+            label.setText(text);
+
+        } catch (Exception ex) {
+            label.setText(ex.getMessage());
+        }
+    }
+
+    
+    
+    private void validateSettings(int nBlocks, int blockSize, int ramSize) {
+        if (nBlocks <= 0 || blockSize <= 0 || ramSize <= 0) {
+            throw new IllegalArgumentException("All values must be greater than 0");
+        }
+
+        
+        if (!isPowerOfTwo(nBlocks) || !isPowerOfTwo(blockSize) || !isPowerOfTwo(ramSize)) {
+            
+            throw new IllegalArgumentException("All values must be powers of 2");
+        }
+
+        
+        if (blockSize > ramSize) {
+            throw new IllegalArgumentException("Block size cannot be larger than RAM size");
+        }
+
+        
+        if (ramSize % blockSize != 0) {
+            
+            throw new IllegalArgumentException("RAM size must be divisible by block size");
+        }
+        
+
+        int ramBlocks = ramSize / blockSize;
+        if (nBlocks > ramBlocks) {
+            throw new IllegalArgumentException("Cache blocks cannot exceed RAM blocks");
+        }
+        
+
+        int setSize = 2;
+
+        if (nBlocks % setSize != 0) {
+            throw new IllegalArgumentException("Cache blocks must be divisible by set size");
+        }
+        
+    }
+
+    
+    
+    private boolean isPowerOfTwo(int value) {
+        return value > 0 && (value & (value - 1)) == 0;
+    }
+
+    
+    
+    
+    private JButton makeButton(String text) {
+        JButton button = new JButton(text);
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setBackground(EMPTY_BLOCK);
+        button.setForeground(TEXT_COLOR);
+        button.setFocusPainted(false);
+        
+        return button;
+    }
+
+    
+    
+    private JTextField makeTextField(String text) {
+        JTextField field = new JTextField(text);
+        field.setBackground(EMPTY_BLOCK);
+        field.setForeground(TEXT_COLOR);
+        field.setCaretColor(TEXT_COLOR);
+        
+        return field;
+    }
+
+    
+    
+    private JLabel makeLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(TEXT_COLOR);
+        
+        return lbl;
+    }
+
+    
+    private JPanel makeBlockPanel(String text) {
+        JPanel panel = new JPanel();
+        panel.setBackground(EMPTY_BLOCK);
+
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(TEXT_COLOR);
+        panel.add(lbl);
+        
+        return panel;
+    }
+
+    
+    
+    
     private JPanel makeLegendItem(String text, Color color) {
         JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         item.setBackground(BG);
+
         JPanel square = new JPanel();
         square.setBackground(color);
         square.setPreferredSize(new java.awt.Dimension(14, 14));
+
         JLabel lbl = new JLabel(text);
         lbl.setForeground(TEXT_COLOR);
+
         item.add(square);
         item.add(lbl);
+        
         return item;
     }
 
     public void resetHighlights() {
-        for (int i = 0; i < 8; i++) ramPanels[i].setBackground(EMPTY_BLOCK);
-        for (int i = 0; i < 4; i++) cachePanels[i].setBackground(EMPTY_BLOCK);
+        
+        for (int i =0; i < ramPanels.length; i++) {
+            
+            ramPanels[i].setBackground(EMPTY_BLOCK);
+        }
+        
+
+        for (int i = 0; i < cachePanels.length; i++) {
+            cachePanels[i].setBackground(EMPTY_BLOCK);
+        }
     }
 
     public void highlightRamBlock(int index) {
-        ramPanels[index].setBackground(RAM_HIT);
+        
+        if (index >= 0 && index < ramPanels.length) {
+            ramPanels[index].setBackground(RAM_HIT);
+        }
     }
 
+    
     public void highlightCacheBlock(int index, boolean hit) {
-        cachePanels[index].setBackground(hit ? CACHE_HIT : CACHE_MISS);
+        if (index >= 0 && index < cachePanels.length) {
+            cachePanels[index].setBackground(hit ? CACHE_HIT : CACHE_MISS);
+        }
     }
 
+    
+    
     public static void main(String[] args) {
+        
         new CacheGUI().setVisible(true);
     }
 }
