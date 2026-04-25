@@ -11,7 +11,7 @@ import javax.swing.JTextField;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-public class CacheGUI extends JFrame {
+public class CacheGUI extends JFrame implements ActionListener {
 
     private Cache cache;
 
@@ -47,7 +47,7 @@ public class CacheGUI extends JFrame {
         cache = new Cache(4, 4, 32);
 
         setTitle("Cache Simulator");
-        setSize(900, 600);
+        setSize(1100, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(BG);
@@ -191,42 +191,27 @@ public class CacheGUI extends JFrame {
     
     
     private void setButtonActions() {
-        applyBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                applySettings();
-            }
-        }
-        );
+        applyBtn.addActionListener(this);
+        directBtn.addActionListener(this);
+        fullyBtn.addActionListener(this);
+        setBtn.addActionListener(this);
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
 
-        
-        directBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                runMapping("direct");
-            }
+        if (e.getSource() == applyBtn) {
+            applySettings();
+        } 
+        else if (e.getSource() == directBtn) {
+            runMapping("direct");
+        } 
+        else if (e.getSource() == fullyBtn) {
+            runMapping("fully");
+        } 
+        else if (e.getSource() == setBtn) {
+            runMapping("set");
         }
-        );
-
-        
-        
-        fullyBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                runMapping("fully");
-            }
-        }
-        );
-
-        
-        
-        setBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                runMapping("set");
-            }
-        }
-        );
     }
 
     
