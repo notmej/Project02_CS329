@@ -11,6 +11,12 @@ import javax.swing.JTextField;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
+/**
+ *
+ * @author Boshra
+ *  
+ */
+
 public class CacheGUI extends JFrame implements ActionListener {
 
     private Cache cache;
